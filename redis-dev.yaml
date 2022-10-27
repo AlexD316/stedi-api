@@ -1,61 +1,55 @@
-# Version of yaml we are using
-apiVersion: apps/v1
-# Kind is type of kubernetes resource we are using
-kind: Deployment
-# Metadata is info related to the object created in kubernetes
-metadata:
-# Name of our deployment
-	name: stedi-duarte
-spec:
-# Replicas is number of pods
-	replicas: 1
-# selector is route to pode
-	selector:
-# Match lables is label for selector
-		matchLabels:
-# App is specific label for pod
-			app: stedi-duarte
-# template describes features on the pod
-	template:
-# Metadata provides labels for the template
-		metadata:
-			labels:
-				app: stedi-duarte
-# Spec refers to the specification of the containers in the pod
-		spec:
-# Containers can have 1 or more Docker containers in the pod
-			containers:
-# Name of the container is specified below
-				- name: stedi-duarte
-# Image is a prebuilt file containing the os
-					image: nginx
-# The ports is a list of tcp ports the pod listens on
-					ports:
-						- containerPort: 80
-					resources:
-						limits:
-							cpu: ".125"
-							memory: "500Mi"
-						requests:
-							cpu: ".125"
-							memory: "250Mi"
-					livenessProbe:
-						httpGet:
-							path: /
-							port: 80
-						initialDelaySeconds: 3
-						periodSeconds: 3
----
-# apiVersion tells kuberbetes which version of yaml to use
 apiVersion: v1
 kind: Service
-metadata: 
-	name: stedi-duarte-loadbalancer
-spec: 
-	selector:
-		app: stedi-duarte
-	type: LoadBalancer
-	ports:
-		- port: 80
-			targetPort: 80
+metadata:
+  name: redis-stedi-dev-duarte
+spec:
+  ports:
+    - port: 6379
+      name: redis
+  clusterIP: None
+  selector:
+    app: redis-stedi-dev-duarte
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-stedi-dev-duarte
+spec:
+  selector:
+    matchLabels:
+      app: redis-stedi-dev-duarte  # has to match .spec.template.metadata.labels
+  serviceName: redis-stedi-dev-duarte
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: redis-stedi-dev-duarte  # has to match .spec.selector.matchLabels
+    spec:
+      containers:
+        - name: redis-stedi-dev-duarte
+          image: redis:7.0.5-alpine
+          imagePullPolicy: Always
+          args: ["--requirepass", "$(REDIS_PASS)", "--appendonly", "yes", "--save", "900", "1", "--save", "30", "2"]
+          ports:
+            - containerPort: 6379
+              name: redis
+          env:
+          - name: REDIS_PASS
+            valueFrom:
+              secretKeyRef:
+                name: redis-secrets-dev-duarte
+                key: REDIS_PASS
+          volumeMounts:
+            - name: redis-dev-volume
+              mountPath: /data
+  volumeClaimTemplates:
+  - metadata:
+      name: redis-dev-volume
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+
 
