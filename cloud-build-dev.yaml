@@ -45,7 +45,7 @@ steps:
       - 'stedi-duarte'
       - '--replicas=0'
     env:
-      - 'CLOUDSDK_COMPUTE_ZONE=us-east1-b'
+      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
       - 'CLOUDSDK_CONTAINER_CLUSTER=cluster-1'
 
       # This step deploys the application in Kubernetes
@@ -66,5 +66,5 @@ steps:
       - 'stedi-duarte'
       - '--replicas=1'
     env:
-      - 'CLOUDSDK_COMPUTE_ZONE=us-east1-b'
+      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
       - 'CLOUDSDK_CONTAINER_CLUSTER=cluster-1'
